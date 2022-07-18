@@ -1,22 +1,25 @@
-# Node.js
-# Build a general Node.js project with npm.
-# Add steps that analyze code, save build artifacts, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/javascript
-
 trigger:
-- master
+    - main
 
+name: Deploy Bicep files
+
+variables:
+    vmImageName: 'ubuntu-latest'
+
+    azureServiceConnection: 'myServiceConnection'
+    resourceGroupName: 'Bicep'
+    location: 'eastus'
+    templateFile: 'main.bicep'
 pool:
-  vmImage: ubuntu-latest
+    vmImage: $(vmImageName)
 
 steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '10.x'
-  displayName: 'Install Node.js'
-
-- script: |
-    npm install
-    npm run build
-    npm test
-  displayName: 'npm install, build, and test'
+    - task: AzureCLI@2
+      inputs:
+          azureSubscription: $(azureServiceConnection)
+          scriptType: bash
+          scriptLocation: inlineScript
+          inlineScript: |
+            az --version
+            az group create --name $(resourceGroupName) --location $(location)
+            az deployment group create --resource-group $(resourceGroupName) --template-file $(templateFile)
